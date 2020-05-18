@@ -3,7 +3,7 @@ import { numericExtent } from "../util/array";
 import { Group } from "../scene/group";
 import { CategoryAxis } from "./axis/categoryAxis";
 import { GroupedCategoryAxis } from "./axis/groupedCategoryAxis";
-import { ChartAxisPosition, ChartAxisDirection } from "./chartAxis";
+import { ChartAxisPosition, ChartAxisDirection, ChartAxis } from "./chartAxis";
 import { Series } from "./series/series";
 import { BBox } from "../scene/bbox";
 import { ClipRect } from "../scene/clipRect";
@@ -196,6 +196,24 @@ export class CartesianChart extends Chart {
         }
 
         this.axes.forEach(axis => axis.update());
+    }
+
+    protected attachAxis(axis: ChartAxis) {
+        const { rangeSelectorClip } = this;
+        if (axis.direction === ChartAxisDirection.X) {
+            rangeSelectorClip.appendChild(axis.group);
+        } else {
+            super.attachAxis(axis);
+        }
+    }
+
+    protected detachAxis(axis: ChartAxis) {
+        const { rangeSelectorClip } = this;
+        if (axis.direction === ChartAxisDirection.X) {
+            rangeSelectorClip.removeChild(axis.group);
+        } else {
+            super.detachAxis(axis);
+        }
     }
 
     protected initSeries(series: Series) {
