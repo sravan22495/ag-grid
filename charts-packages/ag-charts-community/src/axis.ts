@@ -194,7 +194,7 @@ export class Axis<S extends Scale<D, number>, D = any> {
         scale.range = [start, start + span];
     }
 
-    private requestedRange: number[];
+    protected requestedRange: number[];
     set range(value: number[]) {
         this.requestedRange = value.slice();
         this.updateRange();
@@ -320,11 +320,10 @@ export class Axis<S extends Scale<D, number>, D = any> {
      * it will also make it harder to reason about the program.
      */
     update() {
-        const { group, scale, visibleRange, tick, label, gridStyle } = this;
+        const { group, scale, tick, label, gridStyle } = this;
         const rotation = toRadians(this.rotation);
         const parallelLabels = label.parallel;
         const labelRotation = normalizeAngle360(toRadians(label.rotation));
-        const [min, max] = visibleRange;
 
         group.translationX = this.translation.x;
         group.translationY = this.translation.y;
