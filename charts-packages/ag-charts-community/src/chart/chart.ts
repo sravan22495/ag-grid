@@ -717,8 +717,11 @@ export abstract class Chart extends Observable {
         series: Series,
         node: Node
     } | undefined {
-        const allSeries = this.series;
+        if (!this.seriesRect || !this.seriesRect.containsPoint(x, y)) {
+            return undefined;
+        }
 
+        const allSeries = this.series;
         let node: Node | undefined = undefined;
         for (let i = allSeries.length - 1; i >= 0; i--) {
             const series = allSeries[i];
@@ -740,10 +743,6 @@ export abstract class Chart extends Observable {
 
     // Provided x/y are in canvas coordinates.
     private pickClosestSeriesNodeDatum(x: number, y: number): SeriesNodeDatum | undefined {
-        if (!this.seriesRect || !this.seriesRect.containsPoint(x, y)) {
-            return undefined;
-        }
-
         const allSeries = this.series;
 
         type Point = { x: number, y: number};
@@ -831,7 +830,6 @@ export abstract class Chart extends Observable {
         }
         if (lastPick && (hideTooltip || !tooltipTracking)) {
             // cursor moved from a non-marker node to empty space
-            // lastPick.datum.series.dehighlightDatum();
             this.dehighlightDatum();
             this.hideTooltip();
             this.lastPick = undefined;
