@@ -1,6 +1,5 @@
 import { Chart } from "./chart";
 import { numericExtent } from "../util/array";
-import { Group } from "../scene/group";
 import { CategoryAxis } from "./axis/categoryAxis";
 import { GroupedCategoryAxis } from "./axis/groupedCategoryAxis";
 import { ChartAxisPosition, ChartAxisDirection, ChartAxis } from "./chartAxis";
@@ -21,8 +20,8 @@ export class CartesianChart extends Chart {
         this.scene.root.visible = false;
 
         const root = this.scene.root!;
-        root.append(this.rangeSelectorClip);
-        root.append(this._seriesRoot);
+        root.append(this.xAxesClip);
+        root.append(this.seriesRoot);
         root.append(this.legend.group);
         root.append(this.rangeSelector);
 
@@ -44,7 +43,8 @@ export class CartesianChart extends Chart {
     }
 
     readonly rangeSelector = new RangeSelector();
-    private rangeSelectorClip = new ClipRect();
+    private rangeSelectorMargin = 10;
+    private xAxesClip = new ClipRect();
 
     performLayout(): void {
         if (this.dataPending) {
@@ -54,7 +54,6 @@ export class CartesianChart extends Chart {
         this.scene.root.visible = true;
 
         const { width, height, axes, legend, rangeSelector } = this;
-        const rangeSelectorMargin = 10;
 
         const shrinkRect = new BBox(0, 0, width, height);
 
@@ -98,8 +97,8 @@ export class CartesianChart extends Chart {
         shrinkRect.y += padding.top + captionAutoPadding;
         shrinkRect.height -= padding.top + captionAutoPadding + padding.bottom;
 
-        if (this.rangeSelector.visible) {
-            shrinkRect.height -= rangeSelector.height + rangeSelectorMargin;
+        if (rangeSelector.visible) {
+            shrinkRect.height -= rangeSelector.height + this.rangeSelectorMargin;
         }
 
         let bottomAxesHeight = 0;
@@ -132,7 +131,6 @@ export class CartesianChart extends Chart {
             }
         });
 
-        const { rangeSelectorClip } = this;
         axes.forEach(axis => {
             switch (axis.position) {
                 case ChartAxisPosition.Top:
@@ -150,9 +148,6 @@ export class CartesianChart extends Chart {
                     axis.gridLength = shrinkRect.width;
                     break;
                 case ChartAxisPosition.Bottom:
-                    if (axis.group.parent !== rangeSelectorClip) {
-                        rangeSelectorClip.appendChild(axis.group.parent.removeChild(axis.group));
-                    }
                     axis.translation.x = Math.floor(shrinkRect.x);
                     axis.range = [0, shrinkRect.width];
                     axis.gridLength = shrinkRect.height;
@@ -177,21 +172,21 @@ export class CartesianChart extends Chart {
             series.update(); // this has to happen after the `updateAxes` call
         });
 
-        // When seriesRoot is a ClipRect:
         const { seriesRoot } = this;
         seriesRoot.x = shrinkRect.x;
         seriesRoot.y = shrinkRect.y;
         seriesRoot.width = shrinkRect.width;
         seriesRoot.height = shrinkRect.height;
 
-        rangeSelectorClip.x = shrinkRect.x;
-        rangeSelectorClip.y = 0;
-        rangeSelectorClip.width = shrinkRect.width;
-        rangeSelectorClip.height = height;
+        const { xAxesClip } = this;
+        xAxesClip.x = shrinkRect.x;
+        xAxesClip.y = 0;
+        xAxesClip.width = shrinkRect.width;
+        xAxesClip.height = height;
 
-        if (this.rangeSelector.visible) {
+        if (rangeSelector.visible) {
             rangeSelector.x = shrinkRect.x;
-            rangeSelector.y = shrinkRect.y + shrinkRect.height + bottomAxesHeight + rangeSelectorMargin;
+            rangeSelector.y = shrinkRect.y + shrinkRect.height + bottomAxesHeight + this.rangeSelectorMargin;
             rangeSelector.width = shrinkRect.width;
         }
 
@@ -199,18 +194,16 @@ export class CartesianChart extends Chart {
     }
 
     protected attachAxis(axis: ChartAxis) {
-        const { rangeSelectorClip } = this;
         if (axis.direction === ChartAxisDirection.X) {
-            rangeSelectorClip.appendChild(axis.group);
+            this.xAxesClip.appendChild(axis.group);
         } else {
             super.attachAxis(axis);
         }
     }
 
     protected detachAxis(axis: ChartAxis) {
-        const { rangeSelectorClip } = this;
         if (axis.direction === ChartAxisDirection.X) {
-            rangeSelectorClip.removeChild(axis.group);
+            this.xAxesClip.removeChild(axis.group);
         } else {
             super.detachAxis(axis);
         }

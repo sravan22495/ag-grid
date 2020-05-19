@@ -888,7 +888,6 @@ export abstract class Chart extends Observable {
         };
 
         this.highlightDatum(datum);
-        // datum.series.highlightDatum(datum);
 
         const html = datum.series.tooltipEnabled && datum.series.getTooltipHtml(datum);
 
